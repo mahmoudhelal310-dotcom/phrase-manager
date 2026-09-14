@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Phrase Manager by Mahmoud Helal (v24 - Centered Actions Layout)</title>
+<title>Phrase Manager by Mahmoud Helal (v25 - Screenshot & Centered Actions)</title>
 <style>
   :root{
     --teal:#009688;
@@ -38,6 +38,8 @@
   .btn.small{padding:5px 9px;font-size:13px}
   .btn.highlight{background:linear-gradient(45deg, #0b84ff, #009688); font-weight: 600; box-shadow: 0 4px 12px rgba(11,132,255,0.25);}
   .btn.highlight:hover{opacity: 0.95; transform: translateY(-1px);}
+  .btn.shot-btn{background:#0b84ff; font-weight: 600;}
+  .btn.shot-btn:hover{background:#0070e0;}
   .btn.toggle-active{background:#ff9800;color:#fff;font-weight:600}
   .btn.heart{background:transparent;font-size:16px;color:#999;border:0;transition:transform 0.3s ease;padding:4px}
   .btn.heart.active{color:#ff416c;background:linear-gradient(45deg,#ff416c,#ff4b2b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:pulse 0.6s ease;}
@@ -56,12 +58,11 @@
   .searchScope{padding:9px 10px;border-radius:10px;border:1px solid #dfe7ee;background:var(--card);color:var(--text);font-size:14px;cursor:pointer;font-weight:500;outline:none}
   .searchScope:focus{border-color:var(--blue)}
 
-  /* Table styling مع ترتيب متقارب */
+  /* Table styling */
   .tableWrap{margin-top:6px;overflow-x:auto}
   table{width:100%;table-layout:fixed;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(15,20,30,0.06)}
   thead th{background:var(--teal);color:#fff;padding:12px 14px;text-align:left;font-weight:700}
   
-  /* أعمدة منسقة الحجم ومتقاربة */
   th.th-keyword{width:140px}
   th.th-actions{width:220px;text-align:center}
   th.th-phrase{width:auto}
@@ -78,11 +79,17 @@
   .menu{position:absolute;top:110%;right:0;background:var(--card);border-radius:8px;box-shadow:0 8px 26px rgba(12,20,30,0.12);display:none;padding:6px;z-index:99;min-width:180px}
   .menu .mitem{display:block;width:100%;text-align:left;background:transparent;color:var(--text);border:none;padding:8px 10px;font-size:14px;border-radius:8px;cursor:pointer}
   .menu .mitem:hover{background:#f1f5f9}
+
+  /* Screenshot Modal */
+  .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+  .modal-box{background:var(--card);color:var(--text);padding:18px;border-radius:12px;max-width:85vw;max-height:85vh;display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 32px rgba(0,0,0,0.25)}
+  .modal-box img{max-width:100%;max-height:60vh;object-fit:contain;border:1px solid #dfe7ee;border-radius:8px}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end}
   
   /* Toasts */
-  .copiedToast{position:fixed;right:18px;top:18px;background:#4caf50;color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;display:none;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
-  .infoToast{position:fixed;left:18px;top:18px;background:#2196f3;color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;display:none;z-index:999}
-  .dangerToast{position:fixed;left:18px;top:56px;background:var(--danger);color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;display:none;z-index:999}
+  .copiedToast{position:fixed;right:18px;top:18px;background:#4caf50;color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;display:none;z-index:1100;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .infoToast{position:fixed;left:18px;top:18px;background:#2196f3;color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;display:none;z-index:1100}
+  .dangerToast{position:fixed;left:18px;top:56px;background:var(--danger);color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;display:none;z-index:1100}
   
   @media (max-width:880px){ 
     .controls{justify-content:flex-start} 
@@ -113,6 +120,7 @@
     <div class="controls" style="margin-top:12px">
       <button id="floatingModeBtn" class="btn small highlight" title="Open compact always-on-top window with timer">📌 Floating Window + Timer (عائم)</button>
       <button id="autoCopyToggleBtn" class="btn small ghost toggle-active" title="نسخ مباشر بمجرد كتابة الـ Keyword">⚡ Auto-Copy: ON</button>
+      <button id="screenshotBtn" class="btn small shot-btn" title="التقاط لقطة شاشة ونسخها فوراً للحافظة">📸 Screenshot</button>
       <button id="toggleFavsBtn" class="btn ghost small">❤️ Favorites</button>
       <button id="addBtn" class="btn small">➕ Add New Phrase</button>
 
@@ -157,7 +165,6 @@
         <thead>
           <tr>
             <th class="th-keyword">Keyword</th>
-            <!-- جعل عمود الأزرار في المنتصف بجوار الـ Keyword مباشرة -->
             <th class="th-actions">Actions</th>
             <th class="th-phrase">Phrase</th>
           </tr>
@@ -171,6 +178,19 @@
     <div id="dangerToast" class="dangerToast">Error ❌</div>
   </div>
 
+  <!-- نافذة معاينة الاسكرين شوت -->
+  <div id="screenshotModal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="margin:0;font-size:16px;">📸 Captured Screenshot</h3>
+      <img id="screenshotPreview" src="" alt="Screenshot" />
+      <div class="modal-actions">
+        <button id="copyShotBtn" class="btn small">📋 Copy to Clipboard</button>
+        <button id="downloadShotBtn" class="btn small ghost">💾 Download</button>
+        <button id="closeModalBtn" class="btn small ghost" style="color:var(--danger);border-color:rgba(229,57,53,0.3);">Close</button>
+      </div>
+    </div>
+  </div>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
 let PHRASES = JSON.parse(localStorage.getItem('phrases_data') || '[]').map(p => ({
@@ -182,6 +202,7 @@ let theme = localStorage.getItem('theme_v6') || 'light';
 let autoCopyEnabled = localStorage.getItem('auto_copy_mode') !== 'false';
 let timerShortcuts = JSON.parse(localStorage.getItem('timer_shortcuts') || '{"startKey":"Space","resetKey":"KeyR"}');
 let showOnlyFavs = false;
+let currentShotBlob = null;
 
 /* DOM */
 const tbody = document.getElementById('tbody');
@@ -199,6 +220,14 @@ const exportAllBtn = document.getElementById('exportAllBtn');
 const exportMenu = document.getElementById('exportMenu');
 const themeToggle = document.getElementById('themeToggle');
 const topbar = document.getElementById('topbar');
+
+/* Screenshot Elements */
+const screenshotBtn = document.getElementById('screenshotBtn');
+const screenshotModal = document.getElementById('screenshotModal');
+const screenshotPreview = document.getElementById('screenshotPreview');
+const copyShotBtn = document.getElementById('copyShotBtn');
+const downloadShotBtn = document.getElementById('downloadShotBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
 
 function persist(){ 
   localStorage.setItem('phrases_data', JSON.stringify(PHRASES)); 
@@ -226,7 +255,6 @@ autoCopyToggleBtn.addEventListener('click', ()=>{
   showToast(infoToast, autoCopyEnabled ? 'تم تفعيل النسخ التلقائي ⚡' : 'تم تعطيل النسخ التلقائي ✋');
 });
 
-/* عرض الأزرار بجوار الـ Keyword مباشرة */
 function renderRows(list){
   tbody.innerHTML = '';
   list.forEach(item=>{
@@ -403,13 +431,13 @@ exportMenu.addEventListener('click', (e)=>{
     const type = e.target.dataset.type;
     if(type==='html'){
       const html = document.documentElement.outerHTML;
-      downloadBlob(html, 'phrases_mahmoud_helal_v24.html', 'text/html');
+      downloadBlob(html, 'phrases_mahmoud_helal_v25.html', 'text/html');
       showToast(infoToast,'Saved as HTML ✅');
     }else if(type==='csv'){
       if(!PHRASES.length){ showToast(infoToast,'No phrases to export'); return; }
       const rows = ['keyword,text'];
       PHRASES.forEach(p=> rows.push('\"'+p.keyword.replace(/\"/g,'\"\"')+'\",\"'+p.text.replace(/\"/g,'\"\"').replace(/\n/g,'\\n')+'\"'));
-      downloadBlob(rows.join('\n'), 'phrases_mahmoud_helal_v24.csv', 'text/csv');
+      downloadBlob(rows.join('\n'), 'phrases_mahmoud_helal_v25.csv', 'text/csv');
       showToast(infoToast,'Saved as CSV ✅');
     }else if(type==='favs'){
       const favs = PHRASES.filter(p=>favorites.includes(p.keyword));
@@ -479,6 +507,65 @@ document.addEventListener('keydown', (e)=>{
       const text = active.innerText; handleCopy(text, active.closest('tr')); e.preventDefault();
     }
   }
+});
+
+/* --- Screenshot Capture Logic --- */
+screenshotBtn.addEventListener('click', async () => {
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: "always" },
+      audio: false
+    });
+    
+    const track = stream.getVideoTracks()[0];
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    await video.play();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    track.stop();
+
+    canvas.toBlob(async (blob) => {
+      currentShotBlob = blob;
+      screenshotPreview.src = URL.createObjectURL(blob);
+      screenshotModal.style.display = 'flex';
+      
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        showToast(infoToast, 'Copied to Clipboard! 📋');
+      } catch (err) {}
+    }, 'image/png');
+
+  } catch (err) {
+    if (err.name !== 'NotAllowedError') {
+      showToast(dangerToast, 'Screenshot canceled or not allowed ❌');
+    }
+  }
+});
+
+copyShotBtn.addEventListener('click', async () => {
+  if (!currentShotBlob) return;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': currentShotBlob })]);
+    showToast(copiedToast, 'Screenshot Copied 📋✅');
+  } catch (err) {
+    showToast(dangerToast, 'Direct copy failed ❌');
+  }
+});
+
+downloadShotBtn.addEventListener('click', () => {
+  if (!currentShotBlob) return;
+  downloadBlob(currentShotBlob, `Screenshot_${Date.now()}.png`, 'image/png');
+  showToast(infoToast, 'Downloaded ✅');
+});
+
+closeModalBtn.addEventListener('click', () => {
+  screenshotModal.style.display = 'none';
 });
 
 /* Theme toggle */
@@ -634,7 +721,6 @@ function setupFloatingLogic(win){
   const pList = doc.getElementById('pList');
   const pToast = doc.getElementById('pToast');
   
-  /* عداد مدة المحادثة الكلي AHT */
   const ahtVal = doc.getElementById('ahtVal');
   const btnResetAht = doc.getElementById('btnResetAht');
   let ahtSeconds = 0;
@@ -650,7 +736,6 @@ function setupFloatingLogic(win){
     showPopToast('تم تصفير مدة الشات 🔄');
   });
 
-  /* التايمر ونغمات التنبيه */
   const tDisplay = doc.getElementById('tDisplay');
   const tMainBtn = doc.getElementById('tMainBtn');
   const btnTimer = doc.getElementById('btnTimer');
@@ -661,7 +746,7 @@ function setupFloatingLogic(win){
   const keyResetInput = doc.getElementById('keyResetInput');
   const btnTestSound = doc.getElementById('btnTestSound');
 
-  let timerMode = 'timer'; // الافتراضي تايمر
+  let timerMode = 'timer';
   let elapsedMs = 0;
   let remainingMs = 120 * 1000;
   let startTime = 0;
@@ -673,7 +758,6 @@ function setupFloatingLogic(win){
   let holdWarned45 = false;
   let holdWarned25 = false;
 
-  /* محرك الصوت */
   let audioCtx = null;
   function getAudioContext(){
     if(!audioCtx){
@@ -866,7 +950,6 @@ function setupFloatingLogic(win){
     resetTimer();
   });
 
-  /* اختصارات الكيبورد */
   win.addEventListener('keydown', (e)=>{
     if(doc.activeElement === pSearch && e.code !== 'Escape') return;
     if(doc.activeElement === keyStartInput || doc.activeElement === keyResetInput) return;
@@ -880,7 +963,6 @@ function setupFloatingLogic(win){
     }
   });
 
-  /* منطق النسخ التلقائي والتفريغ الفوري (Auto-Clear) */
   let localAutoCopy = autoCopyEnabled;
   function updateBadge(){
     pMode.className = 'modeBadge ' + (localAutoCopy ? '' : 'off');

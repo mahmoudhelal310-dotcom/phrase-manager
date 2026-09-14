@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Phrase Manager by Mahmoud Helal (v26 - Floating Screenshot Edition)</title>
+<title>Phrase Manager by Mahmoud Helal (v26 - Optimized Floating)</title>
 <style>
   :root{
     --teal:#009688;
@@ -199,7 +199,7 @@ let PHRASES = JSON.parse(localStorage.getItem('phrases_data') || '[]').map(p => 
 let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 let theme = localStorage.getItem('theme_v6') || 'light';
 let autoCopyEnabled = localStorage.getItem('auto_copy_mode') !== 'false';
-let timerShortcuts = JSON.parse(localStorage.getItem('timer_shortcuts') || '{"startKey":"Space","resetKey":"KeyR"}');
+let timerShortcuts = JSON.parse(localStorage.getItem('timer_shortcuts') || '{"startKey":"Space","pauseKey":"KeyA"}');
 let showOnlyFavs = false;
 let currentShotBlob = null;
 
@@ -588,7 +588,7 @@ function applyTheme(t){
 themeToggle.addEventListener('click', ()=> applyTheme(theme==='dark'?'light':'dark') );
 applyTheme(theme);
 
-/* --- كود النافذة العائمة الشاملة --- */
+/* --- كود النافذة العائمة الشاملة المحسنة والمدمجة --- */
 floatingModeBtn.addEventListener('click', async ()=>{
   const pipHTML = `
     <!DOCTYPE html>
@@ -599,69 +599,80 @@ floatingModeBtn.addEventListener('click', async ()=>{
       <style>
         *{box-sizing:border-box}
         body{
-          margin:0;padding:8px;font-family:system-ui,-apple-system,sans-serif;
+          margin:0;padding:6px;font-family:system-ui,-apple-system,sans-serif;
           background:${theme==='dark'?'#0f1724':'#f8fafc'};
           color:${theme==='dark'?'#e6eef8':'#1e293b'};
+          overflow-x:hidden;
+          user-select:none;
         }
         
         .sessionBar{
           display:flex;justify-content:space-between;align-items:center;
           background:${theme==='dark'?'#0b1220':'#e2e8f0'};
-          padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;
-          color:${theme==='dark'?'#94a3b8':'#475569'};margin-bottom:6px;
+          padding:3px 6px;border-radius:5px;font-size:10.5px;font-weight:700;
+          color:${theme==='dark'?'#94a3b8':'#475569'};margin-bottom:5px;
         }
-        .barActions{display:flex;gap:8px;align-items:center}
-        .ahtResetBtn{background:transparent;border:none;color:#0b84ff;cursor:pointer;font-size:11px;font-weight:bold;padding:0}
-        .ahtShotBtn{background:transparent;border:none;color:#009688;cursor:pointer;font-size:11px;font-weight:bold;padding:0;transition:transform 0.15s}
+        .barActions{display:flex;gap:6px;align-items:center}
+        .ahtResetBtn{background:transparent;border:none;color:#0b84ff;cursor:pointer;font-size:10.5px;font-weight:bold;padding:0}
+        .ahtShotBtn{background:transparent;border:none;color:#009688;cursor:pointer;font-size:10.5px;font-weight:bold;padding:0;transition:transform 0.15s}
         .ahtShotBtn:hover{transform:scale(1.08)}
 
-        .timerBox{background:${theme==='dark'?'#162032':'#ffffff'};border:1px solid ${theme==='dark'?'#22324d':'#e2e8f0'};border-radius:10px;padding:8px 10px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.06);position:relative}
+        .timerBox{
+          background:${theme==='dark'?'#162032':'#ffffff'};
+          border:1px solid ${theme==='dark'?'#22324d':'#cbd5e1'};
+          border-radius:8px;padding:6px 8px;margin-bottom:6px;
+          display:flex;flex-direction:column;gap:5px;box-shadow:0 1px 3px rgba(0,0,0,0.05);
+        }
         .timerDisplayRow{display:flex;justify-content:space-between;align-items:center}
-        .timerNum{font-size:22px;font-weight:800;font-family:monospace;letter-spacing:1px;color:#0b84ff;transition:color 0.2s}
-        .timerNum .ms{font-size:16px;opacity:0.8}
+        .timerNum{font-size:20px;font-weight:800;font-family:monospace;letter-spacing:0.8px;color:#0b84ff;transition:color 0.2s}
+        .timerNum .ms{font-size:14px;opacity:0.8}
         .timerNum.warning-orange{color:#ff9800;animation:pulse 0.9s infinite alternate}
         .timerNum.warning-red{color:#e53935;animation:pulse 0.5s infinite alternate}
-        @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+        @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.05)}}
         
         .timerActionGroup{display:flex;gap:4px;align-items:center}
-        .tBtn{border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s}
+        .tBtn{
+          border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:700;
+          cursor:pointer;transition:transform 0.1s, opacity 0.15s;
+        }
+        .tBtn:active{transform:scale(0.96)}
         .tBtn.startState{background:#009688;color:#fff}
-        .tBtn.resetState{background:#e53935;color:#fff}
-        .settingsBtn{background:transparent;border:none;font-size:16px;cursor:pointer;padding:4px;color:${theme==='dark'?'#94a3b8':'#64748b'};transition:transform 0.2s}
+        .tBtn.pauseState{background:#ff9800;color:#fff}
+        .settingsBtn{background:transparent;border:none;font-size:14px;cursor:pointer;padding:2px;color:${theme==='dark'?'#94a3b8':'#64748b'};transition:transform 0.2s}
         .settingsBtn:hover{transform:rotate(45deg);color:#0b84ff}
 
-        .timerModesRow{display:flex;gap:6px;justify-content:flex-end}
-        .modeTag{font-size:11px;padding:3px 10px;border-radius:6px;background:transparent;color:${theme==='dark'?'#94a3b8':'#64748b'};cursor:pointer;border:1px solid ${theme==='dark'?'#334155':'#cbd5e1'};font-weight:600;transition:all 0.15s}
-        .modeTag.active{background:#0b84ff;color:#fff;border-color:#0b84ff;box-shadow:0 2px 6px rgba(11,132,255,0.3)}
+        .timerModesRow{display:flex;gap:4px;justify-content:flex-end}
+        .modeTag{font-size:10px;padding:2px 7px;border-radius:5px;background:transparent;color:${theme==='dark'?'#94a3b8':'#64748b'};cursor:pointer;border:1px solid ${theme==='dark'?'#334155':'#cbd5e1'};font-weight:600;transition:all 0.15s}
+        .modeTag.active{background:#0b84ff;color:#fff;border-color:#0b84ff;box-shadow:0 2px 4px rgba(11,132,255,0.25)}
 
-        .settingsPanel{display:none;background:${theme==='dark'?'#111927':'#f1f5f9'};border:1px solid ${theme==='dark'?'#22324d':'#cbd5e1'};border-radius:8px;padding:8px;margin-bottom:8px;font-size:12px}
-        .settingsRow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-        .keyInput{width:90px;text-align:center;padding:3px 6px;border-radius:5px;border:1px solid #0b84ff;font-weight:bold;background:${theme==='dark'?'#1e293b':'#fff'};color:${theme==='dark'?'#fff':'#000'};cursor:pointer}
+        .settingsPanel{display:none;background:${theme==='dark'?'#111927':'#f1f5f9'};border:1px solid ${theme==='dark'?'#22324d':'#cbd5e1'};border-radius:6px;padding:6px;margin-bottom:6px;font-size:11px}
+        .settingsRow{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+        .keyInput{width:80px;text-align:center;padding:2px 4px;border-radius:4px;border:1px solid #0b84ff;font-weight:bold;background:${theme==='dark'?'#1e293b':'#fff'};color:${theme==='dark'?'#fff':'#000'};cursor:pointer;font-size:10px}
         .keyInput:focus{background:#0b84ff;color:#fff}
-        .testSoundBtn{background:#0b84ff;color:#fff;border:none;border-radius:5px;padding:4px 8px;font-size:11px;cursor:pointer;font-weight:bold}
+        .testSoundBtn{background:#0b84ff;color:#fff;border:none;border-radius:4px;padding:3px 6px;font-size:10px;cursor:pointer;font-weight:bold}
 
-        .searchWrap{position:sticky;top:0;background:${theme==='dark'?'#0f1724':'#f8fafc'};padding-bottom:6px;z-index:10;display:flex;gap:6px;align-items:center}
-        #pSearch{flex:1;padding:8px 10px;border-radius:8px;border:1px solid #0b84ff;font-size:13px;outline:none;background:${theme==='dark'?'#1e293b':'#fff'};color:${theme==='dark'?'#fff':'#000'}}
-        .modeBadge{font-size:10px;padding:6px 7px;border-radius:6px;background:#ff9800;color:#fff;cursor:pointer;white-space:nowrap;font-weight:bold;user-select:none}
+        .searchWrap{position:sticky;top:0;background:${theme==='dark'?'#0f1724':'#f8fafc'};padding-bottom:5px;z-index:10;display:flex;gap:4px;align-items:center}
+        #pSearch{flex:1;padding:5px 8px;border-radius:6px;border:1px solid #0b84ff;font-size:11.5px;outline:none;background:${theme==='dark'?'#1e293b':'#fff'};color:${theme==='dark'?'#fff':'#000'}}
+        .modeBadge{font-size:9.5px;padding:5px 6px;border-radius:5px;background:#ff9800;color:#fff;cursor:pointer;white-space:nowrap;font-weight:bold;user-select:none}
         .modeBadge.off{background:#94a3b8}
 
-        .list{display:flex;flex-direction:column;gap:6px;max-height:350px;overflow-y:auto}
-        .item{display:flex;flex-direction:column;gap:3px;padding:7px 9px;background:${theme==='dark'?'#1b2537':'#ffffff'};border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;transition:all 0.15s;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+        .list{display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;user-select:text}
+        .item{display:flex;flex-direction:column;gap:2px;padding:5px 7px;background:${theme==='dark'?'#1b2537':'#ffffff'};border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;transition:all 0.15s;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
         .item:hover{background:${theme==='dark'?'#24334a':'#f1f5f9'};transform:translateX(-2px)}
         .headerRow{display:flex;justify-content:space-between;align-items:center}
-        .kw{font-weight:bold;color:#009688;font-size:12px;background:rgba(0,150,136,0.1);padding:1px 6px;border-radius:4px}
-        .copyBtn{background:#0b84ff;color:#fff;border:none;border-radius:5px;padding:3px 7px;font-size:11px;cursor:pointer;font-weight:600}
-        .txt{font-size:11.5px;white-space:pre-wrap;color:${theme==='dark'?'#cbd5e1':'#475569'};max-height:48px;overflow:hidden;text-overflow:ellipsis}
+        .kw{font-weight:bold;color:#009688;font-size:11px;background:rgba(0,150,136,0.1);padding:1px 5px;border-radius:4px}
+        .copyBtn{background:#0b84ff;color:#fff;border:none;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;font-weight:600}
+        .txt{font-size:10.5px;white-space:pre-wrap;color:${theme==='dark'?'#cbd5e1':'#475569'};max-height:38px;overflow:hidden;text-overflow:ellipsis}
         
-        .toast{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:5px 14px;border-radius:20px;font-size:11.5px;font-weight:bold;display:none;z-index:99;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+        .toast{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:4px 12px;border-radius:15px;font-size:10.5px;font-weight:bold;display:none;z-index:99;box-shadow:0 3px 8px rgba(0,0,0,0.25)}
       </style>
     </head>
     <body>
       <div class="sessionBar">
-        <span>⏱️ مدة الشات: <span id="ahtVal" style="color:#0b84ff">00:00</span></span>
+        <span>⏱️ الشات: <span id="ahtVal" style="color:#0b84ff">00:00</span></span>
         <div class="barActions">
           <button id="btnFloatingShot" class="ahtShotBtn" title="التقاط اسكرين شوت ونسخها فوراً">📸 سكرين</button>
-          <button id="btnResetAht" class="ahtResetBtn" title="تصفير مدة الشات لبدء محادثة جديدة">🔄 شات جديد</button>
+          <button id="btnResetAht" class="ahtResetBtn" title="تصفير مدة الشات لبدء محادثة جديدة">🔄 جديد</button>
         </div>
       </div>
 
@@ -669,21 +680,22 @@ floatingModeBtn.addEventListener('click', async ()=>{
         <div class="timerDisplayRow">
           <div id="tDisplay" class="timerNum">00:00<span class="ms">.0</span></div>
           <div class="timerActionGroup">
-            <button id="tMainBtn" class="tBtn startState">▶ بدء</button>
+            <button id="tMainBtn" class="tBtn startState" title="Space: تشغيل وتصفير من جديد">▶ بدء / تصفير</button>
+            <button id="tPauseBtn" class="tBtn pauseState" title="A: إيقاف مؤقت">⏸ إيقاف (A)</button>
             <button id="btnSettings" class="settingsBtn" title="تعديل اختصارات الكيبورد واختبار الصوت">⚙️</button>
           </div>
         </div>
 
         <div id="settingsPanel" class="settingsPanel">
           <div class="settingsRow">
-            <span>اختصار البدء / الإيقاف:</span>
+            <span>تشغيل وتصفير:</span>
             <input id="keyStartInput" class="keyInput" readonly />
           </div>
           <div class="settingsRow">
-            <span>اختصار التصفير:</span>
-            <input id="keyResetInput" class="keyInput" readonly />
+            <span>إيقاف مؤقت (Pause):</span>
+            <input id="keyPauseInput" class="keyInput" readonly />
           </div>
-          <div class="settingsRow" style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.08)">
+          <div class="settingsRow" style="margin-top:6px;padding-top:4px;border-top:1px solid rgba(0,0,0,0.08)">
             <span>تجربة نغمة التنبيه:</span>
             <button id="btnTestSound" class="testSoundBtn">🔊 اختبار الصوت</button>
           </div>
@@ -696,7 +708,7 @@ floatingModeBtn.addEventListener('click', async ()=>{
       </div>
 
       <div class="searchWrap">
-        <input id="pSearch" placeholder="ابحث بالـ Keyword فقط..." autofocus autocomplete="off" />
+        <input id="pSearch" placeholder="ابحث بالـ Keyword (Esc للتحكم بالتايمر)..." autocomplete="off" />
         <span id="pMode" class="modeBadge" title="انقر للتشغيل/التعطيل">⚡ Auto</span>
       </div>
       <div id="pList" class="list"></div>
@@ -708,8 +720,8 @@ floatingModeBtn.addEventListener('click', async ()=>{
   if ('documentPictureInPicture' in window) {
     try {
       const pipWindow = await window.documentPictureInPicture.requestWindow({
-        width: 380,
-        height: 590,
+        width: 300,
+        height: 420,
       });
       pipWindow.document.write(pipHTML);
       pipWindow.document.close();
@@ -720,7 +732,7 @@ floatingModeBtn.addEventListener('click', async ()=>{
     }
   }
 
-  const popup = window.open('', 'floating_phrase_manager', 'width=380,height=590,top=100,left=100,alwaysOnTop=yes,resizable=yes');
+  const popup = window.open('', 'floating_phrase_manager', 'width=300,height=420,top=80,left=80,alwaysOnTop=yes,resizable=yes');
   if(popup){
     popup.document.write(pipHTML);
     popup.document.close();
@@ -757,20 +769,21 @@ function setupFloatingLogic(win){
   /* التقاط الاسكرين شوت من داخل النافذة العائمة */
   btnFloatingShot.addEventListener('click', () => {
     captureAndCopyScreenshot((blob, copied) => {
-      showPopToast('📸 تم التقاط ونسخ الاسكرين شوت للحافظة ✅');
+      showPopToast('📸 تم نسخ الاسكرين شوت ✅');
     }, () => {
-      showPopToast('تعذر التقاط الاسكرين شوت ❌');
+      showPopToast('تعذر التقاط الاسكرين ❌');
     });
   });
 
   const tDisplay = doc.getElementById('tDisplay');
   const tMainBtn = doc.getElementById('tMainBtn');
+  const tPauseBtn = doc.getElementById('tPauseBtn');
   const btnTimer = doc.getElementById('btnTimer');
   const btnHold = doc.getElementById('btnHold');
   const btnSettings = doc.getElementById('btnSettings');
   const settingsPanel = doc.getElementById('settingsPanel');
   const keyStartInput = doc.getElementById('keyStartInput');
-  const keyResetInput = doc.getElementById('keyResetInput');
+  const keyPauseInput = doc.getElementById('keyPauseInput');
   const btnTestSound = doc.getElementById('btnTestSound');
 
   let timerMode = 'timer';
@@ -780,11 +793,8 @@ function setupFloatingLogic(win){
   let timerInterval = null;
   let isRunning = false;
 
-  /* تم ضبط التنبيه هنا عند 40 ثانية بدلاً من 45 للتايمر فقط */
   let timerWarned40 = false;
   let timerWarned120 = false;
-
-  /* تنبيهات الهولد بقيت كما هي 45 و 25 ثانية دون أي تعديل */
   let holdWarned45 = false;
   let holdWarned25 = false;
 
@@ -830,8 +840,11 @@ function setupFloatingLogic(win){
     return code.replace('Key','').replace('Digit','');
   }
 
+  if(!timerShortcuts.startKey) timerShortcuts.startKey = 'Space';
+  if(!timerShortcuts.pauseKey) timerShortcuts.pauseKey = 'KeyA';
+
   keyStartInput.value = getKeyName(timerShortcuts.startKey);
-  keyResetInput.value = getKeyName(timerShortcuts.resetKey);
+  keyPauseInput.value = getKeyName(timerShortcuts.pauseKey);
 
   btnSettings.addEventListener('click', ()=>{
     settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
@@ -848,7 +861,7 @@ function setupFloatingLogic(win){
     });
   }
   bindKeySetting(keyStartInput, 'startKey');
-  bindKeySetting(keyResetInput, 'resetKey');
+  bindKeySetting(keyPauseInput, 'pauseKey');
 
   function formatTime(ms){
     const totalSec = Math.floor(ms / 1000);
@@ -861,7 +874,6 @@ function setupFloatingLogic(win){
   function updateTimerUI(){
     if(timerMode === 'timer'){
       tDisplay.innerHTML = formatTime(elapsedMs);
-      /* تحول اللون البرتقالي عند 40 ثانية */
       if(elapsedMs >= 40000 && elapsedMs < 120000){
         tDisplay.className = 'timerNum warning-orange';
       } else if(elapsedMs >= 120000){
@@ -870,7 +882,6 @@ function setupFloatingLogic(win){
         tDisplay.className = 'timerNum';
       }
     } else {
-      /* الهولد كما هو تماماً */
       tDisplay.innerHTML = formatTime(remainingMs);
       if(remainingMs <= 25000 && remainingMs > 0){
         tDisplay.className = 'timerNum warning-red';
@@ -882,13 +893,20 @@ function setupFloatingLogic(win){
     }
   }
 
-  function startTimer(){
-    if(isRunning) return;
-    isRunning = true;
+  function startOrRestartTimer(){
     getAudioContext();
+    if(isRunning){
+      win.clearInterval(timerInterval);
+    }
+    
+    elapsedMs = 0;
+    remainingMs = 120 * 1000;
+    timerWarned40 = false;
+    timerWarned120 = false;
+    holdWarned45 = false;
+    holdWarned25 = false;
 
-    tMainBtn.innerText = '🔄 تصفير';
-    tMainBtn.className = 'tBtn resetState';
+    isRunning = true;
     startTime = performance.now();
     
     timerInterval = win.setInterval(()=>{
@@ -899,7 +917,6 @@ function setupFloatingLogic(win){
       if(timerMode === 'timer'){
         elapsedMs += delta;
 
-        /* رنّة التايمر العادي عند الثانية 40 */
         if(!timerWarned40 && elapsedMs >= 40000){
           timerWarned40 = true;
           playAlertBeep(700, 2);
@@ -914,7 +931,6 @@ function setupFloatingLogic(win){
 
         updateTimerUI();
       } else {
-        /* مؤقت الهولد الأصلي بدون أي تعديل */
         remainingMs -= delta;
 
         if(!holdWarned45 && remainingMs <= 45000 && remainingMs > 0){
@@ -932,48 +948,36 @@ function setupFloatingLogic(win){
         if(remainingMs <= 0){
           remainingMs = 0;
           playAlertBeep(1000, 3);
-          resetTimer();
+          stopTimer();
           showPopToast('انتهى وقت الهولد بالكامل! 🔔');
         } else {
           updateTimerUI();
         }
       }
     }, 100);
+
+    updateTimerUI();
+    showPopToast('▶ 00:00 بدأ من جديد');
   }
 
   function stopTimer(){
+    if(!isRunning) return;
     isRunning = false;
     win.clearInterval(timerInterval);
-    tMainBtn.innerText = '▶ استئناف';
-    tMainBtn.className = 'tBtn startState';
+    showPopToast('⏸ إيقاف مؤقت');
   }
 
-  function resetTimer(){
-    isRunning = false;
-    win.clearInterval(timerInterval);
-    elapsedMs = 0;
-    remainingMs = 120 * 1000;
-    timerWarned40 = false;
-    timerWarned120 = false;
-    holdWarned45 = false;
-    holdWarned25 = false;
-    tMainBtn.innerText = '▶ بدء';
-    tMainBtn.className = 'tBtn startState';
-    updateTimerUI();
-  }
-
-  function toggleTimer(){
-    if(isRunning) resetTimer(); else startTimer();
-  }
-
-  tMainBtn.addEventListener('click', toggleTimer);
+  tMainBtn.addEventListener('click', startOrRestartTimer);
+  tPauseBtn.addEventListener('click', stopTimer);
 
   btnTimer.addEventListener('click', ()=>{
     if(timerMode === 'timer') return;
     timerMode = 'timer';
     btnTimer.classList.add('active');
     btnHold.classList.remove('active');
-    resetTimer();
+    stopTimer();
+    elapsedMs = 0;
+    updateTimerUI();
   });
 
   btnHold.addEventListener('click', ()=>{
@@ -981,19 +985,26 @@ function setupFloatingLogic(win){
     timerMode = 'hold';
     btnHold.classList.add('active');
     btnTimer.classList.remove('active');
-    resetTimer();
+    stopTimer();
+    remainingMs = 120 * 1000;
+    updateTimerUI();
   });
 
   win.addEventListener('keydown', (e)=>{
-    if(doc.activeElement === pSearch && e.code !== 'Escape') return;
-    if(doc.activeElement === keyStartInput || doc.activeElement === keyResetInput) return;
+    if(doc.activeElement === pSearch){
+      if(e.code === 'Escape'){
+        pSearch.blur();
+      }
+      return;
+    }
+    if(doc.activeElement === keyStartInput || doc.activeElement === keyPauseInput) return;
 
     if(e.code === timerShortcuts.startKey){
       e.preventDefault();
-      toggleTimer();
-    } else if(e.code === timerShortcuts.resetKey){
+      startOrRestartTimer();
+    } else if(e.code === timerShortcuts.pauseKey){
       e.preventDefault();
-      resetTimer();
+      stopTimer();
     }
   });
 
@@ -1015,7 +1026,7 @@ function setupFloatingLogic(win){
   function showPopToast(msg){
     pToast.innerText = msg;
     pToast.style.display = 'block';
-    setTimeout(()=> pToast.style.display = 'none', 1600);
+    setTimeout(()=> pToast.style.display = 'none', 1400);
   }
 
   async function execCopy(text, msg){
@@ -1031,7 +1042,7 @@ function setupFloatingLogic(win){
 
   function render(list){
     pList.innerHTML = '';
-    const slice = list.slice(0, 40);
+    const slice = list.slice(0, 30);
     slice.forEach(item => {
       const div = doc.createElement('div');
       div.className = 'item';
@@ -1061,7 +1072,7 @@ function setupFloatingLogic(win){
     if(localAutoCopy){
       const exactMatch = PHRASES.find(p => p.keyword.toLowerCase() === q);
       if(exactMatch){
-        execCopy(exactMatch.text, `⚡ تم النسخ فوراً: ${exactMatch.keyword}`);
+        execCopy(exactMatch.text, `⚡ تم النسخ: ${exactMatch.keyword}`);
         setTimeout(()=>{
           pSearch.value = '';
           render(PHRASES);

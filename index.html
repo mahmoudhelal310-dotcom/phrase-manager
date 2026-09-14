@@ -178,7 +178,6 @@
     <div id="dangerToast" class="dangerToast">Error ❌</div>
   </div>
 
-  <!-- نافذة معاينة الاسكرين شوت الرئيسية -->
   <div id="screenshotModal" class="modal-overlay">
     <div class="modal-box">
       <h3 style="margin:0;font-size:16px;">📸 Captured Screenshot</h3>
@@ -781,8 +780,11 @@ function setupFloatingLogic(win){
   let timerInterval = null;
   let isRunning = false;
 
-  let timerWarned45 = false;
+  /* تم ضبط التنبيه هنا عند 40 ثانية بدلاً من 45 للتايمر فقط */
+  let timerWarned40 = false;
   let timerWarned120 = false;
+
+  /* تنبيهات الهولد بقيت كما هي 45 و 25 ثانية دون أي تعديل */
   let holdWarned45 = false;
   let holdWarned25 = false;
 
@@ -859,7 +861,8 @@ function setupFloatingLogic(win){
   function updateTimerUI(){
     if(timerMode === 'timer'){
       tDisplay.innerHTML = formatTime(elapsedMs);
-      if(elapsedMs >= 45000 && elapsedMs < 120000){
+      /* تحول اللون البرتقالي عند 40 ثانية */
+      if(elapsedMs >= 40000 && elapsedMs < 120000){
         tDisplay.className = 'timerNum warning-orange';
       } else if(elapsedMs >= 120000){
         tDisplay.className = 'timerNum warning-red';
@@ -867,6 +870,7 @@ function setupFloatingLogic(win){
         tDisplay.className = 'timerNum';
       }
     } else {
+      /* الهولد كما هو تماماً */
       tDisplay.innerHTML = formatTime(remainingMs);
       if(remainingMs <= 25000 && remainingMs > 0){
         tDisplay.className = 'timerNum warning-red';
@@ -895,10 +899,11 @@ function setupFloatingLogic(win){
       if(timerMode === 'timer'){
         elapsedMs += delta;
 
-        if(!timerWarned45 && elapsedMs >= 45000){
-          timerWarned45 = true;
+        /* رنّة التايمر العادي عند الثانية 40 */
+        if(!timerWarned40 && elapsedMs >= 40000){
+          timerWarned40 = true;
           playAlertBeep(700, 2);
-          showPopToast('⏱️ مرت 45 ثانية!');
+          showPopToast('⏱️ مرت 40 ثانية!');
         }
 
         if(!timerWarned120 && elapsedMs >= 120000){
@@ -909,6 +914,7 @@ function setupFloatingLogic(win){
 
         updateTimerUI();
       } else {
+        /* مؤقت الهولد الأصلي بدون أي تعديل */
         remainingMs -= delta;
 
         if(!holdWarned45 && remainingMs <= 45000 && remainingMs > 0){
@@ -947,7 +953,7 @@ function setupFloatingLogic(win){
     win.clearInterval(timerInterval);
     elapsedMs = 0;
     remainingMs = 120 * 1000;
-    timerWarned45 = false;
+    timerWarned40 = false;
     timerWarned120 = false;
     holdWarned45 = false;
     holdWarned25 = false;

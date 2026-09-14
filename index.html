@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Phrase Manager by Mahmoud Helal (v25 - Screenshot & Centered Actions)</title>
+<title>Phrase Manager by Mahmoud Helal (v26 - Floating Screenshot Edition)</title>
 <style>
   :root{
     --teal:#009688;
@@ -178,7 +178,7 @@
     <div id="dangerToast" class="dangerToast">Error ❌</div>
   </div>
 
-  <!-- نافذة معاينة الاسكرين شوت -->
+  <!-- نافذة معاينة الاسكرين شوت الرئيسية -->
   <div id="screenshotModal" class="modal-overlay">
     <div class="modal-box">
       <h3 style="margin:0;font-size:16px;">📸 Captured Screenshot</h3>
@@ -431,13 +431,13 @@ exportMenu.addEventListener('click', (e)=>{
     const type = e.target.dataset.type;
     if(type==='html'){
       const html = document.documentElement.outerHTML;
-      downloadBlob(html, 'phrases_mahmoud_helal_v25.html', 'text/html');
+      downloadBlob(html, 'phrases_mahmoud_helal_v26.html', 'text/html');
       showToast(infoToast,'Saved as HTML ✅');
     }else if(type==='csv'){
       if(!PHRASES.length){ showToast(infoToast,'No phrases to export'); return; }
       const rows = ['keyword,text'];
       PHRASES.forEach(p=> rows.push('\"'+p.keyword.replace(/\"/g,'\"\"')+'\",\"'+p.text.replace(/\"/g,'\"\"').replace(/\n/g,'\\n')+'\"'));
-      downloadBlob(rows.join('\n'), 'phrases_mahmoud_helal_v25.csv', 'text/csv');
+      downloadBlob(rows.join('\n'), 'phrases_mahmoud_helal_v26.csv', 'text/csv');
       showToast(infoToast,'Saved as CSV ✅');
     }else if(type==='favs'){
       const favs = PHRASES.filter(p=>favorites.includes(p.keyword));
@@ -509,8 +509,8 @@ document.addEventListener('keydown', (e)=>{
   }
 });
 
-/* --- Screenshot Capture Logic --- */
-screenshotBtn.addEventListener('click', async () => {
+/* Screenshot Capture Functionality */
+async function captureAndCopyScreenshot(onSuccess, onError){
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({
       video: { cursor: "always" },
@@ -532,20 +532,31 @@ screenshotBtn.addEventListener('click', async () => {
 
     canvas.toBlob(async (blob) => {
       currentShotBlob = blob;
-      screenshotPreview.src = URL.createObjectURL(blob);
-      screenshotModal.style.display = 'flex';
-      
       try {
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        showToast(infoToast, 'Copied to Clipboard! 📋');
-      } catch (err) {}
+        if(onSuccess) onSuccess(blob, true);
+      } catch (err) {
+        if(onSuccess) onSuccess(blob, false);
+      }
     }, 'image/png');
 
   } catch (err) {
     if (err.name !== 'NotAllowedError') {
-      showToast(dangerToast, 'Screenshot canceled or not allowed ❌');
+      if(onError) onError(err);
     }
   }
+}
+
+screenshotBtn.addEventListener('click', () => {
+  captureAndCopyScreenshot((blob, copied) => {
+    screenshotPreview.src = URL.createObjectURL(blob);
+    screenshotModal.style.display = 'flex';
+    if(copied){
+      showToast(copiedToast, 'Copied to Clipboard! 📋');
+    }
+  }, () => {
+    showToast(dangerToast, 'Screenshot failed or not allowed ❌');
+  });
 });
 
 copyShotBtn.addEventListener('click', async () => {
@@ -600,7 +611,10 @@ floatingModeBtn.addEventListener('click', async ()=>{
           padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;
           color:${theme==='dark'?'#94a3b8':'#475569'};margin-bottom:6px;
         }
-        .ahtResetBtn{background:transparent;border:none;color:#0b84ff;cursor:pointer;font-size:11px;font-weight:bold}
+        .barActions{display:flex;gap:8px;align-items:center}
+        .ahtResetBtn{background:transparent;border:none;color:#0b84ff;cursor:pointer;font-size:11px;font-weight:bold;padding:0}
+        .ahtShotBtn{background:transparent;border:none;color:#009688;cursor:pointer;font-size:11px;font-weight:bold;padding:0;transition:transform 0.15s}
+        .ahtShotBtn:hover{transform:scale(1.08)}
 
         .timerBox{background:${theme==='dark'?'#162032':'#ffffff'};border:1px solid ${theme==='dark'?'#22324d':'#e2e8f0'};border-radius:10px;padding:8px 10px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.06);position:relative}
         .timerDisplayRow{display:flex;justify-content:space-between;align-items:center}
@@ -646,7 +660,10 @@ floatingModeBtn.addEventListener('click', async ()=>{
     <body>
       <div class="sessionBar">
         <span>⏱️ مدة الشات: <span id="ahtVal" style="color:#0b84ff">00:00</span></span>
-        <button id="btnResetAht" class="ahtResetBtn" title="تصفير مدة الشات لبدء محادثة جديدة">🔄 شات جديد</button>
+        <div class="barActions">
+          <button id="btnFloatingShot" class="ahtShotBtn" title="التقاط اسكرين شوت ونسخها فوراً">📸 سكرين</button>
+          <button id="btnResetAht" class="ahtResetBtn" title="تصفير مدة الشات لبدء محادثة جديدة">🔄 شات جديد</button>
+        </div>
       </div>
 
       <div class="timerBox">
@@ -723,6 +740,8 @@ function setupFloatingLogic(win){
   
   const ahtVal = doc.getElementById('ahtVal');
   const btnResetAht = doc.getElementById('btnResetAht');
+  const btnFloatingShot = doc.getElementById('btnFloatingShot');
+
   let ahtSeconds = 0;
   win.setInterval(()=>{
     ahtSeconds++;
@@ -734,6 +753,15 @@ function setupFloatingLogic(win){
     ahtSeconds = 0;
     ahtVal.innerText = '00:00';
     showPopToast('تم تصفير مدة الشات 🔄');
+  });
+
+  /* التقاط الاسكرين شوت من داخل النافذة العائمة */
+  btnFloatingShot.addEventListener('click', () => {
+    captureAndCopyScreenshot((blob, copied) => {
+      showPopToast('📸 تم التقاط ونسخ الاسكرين شوت للحافظة ✅');
+    }, () => {
+      showPopToast('تعذر التقاط الاسكرين شوت ❌');
+    });
   });
 
   const tDisplay = doc.getElementById('tDisplay');

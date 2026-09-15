@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Phrase Manager by Mahmoud Helal (v26 - Optimized Floating 2.3)</title>
+<title>Phrase Manager by Mahmoud Helal (v26 - Full Layout & Case Support)</title>
 <style>
   :root{
     --teal:#009688;
@@ -192,6 +192,39 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
+/* دوال تحويل لغة الكيبورد الشاملة (Small & Capital & Shift) */
+const EN_BASE = "qwertyuiopasdfghjklzxcvbnm";
+const AR_BASE = "ضصثقفغعهخحشسيبلاتنمئءؤرلاىةوزظ";
+
+const EN_SHIFT = 'QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>?~';
+const AR_SHIFT = 'ًٌَُلإإ‘÷×؛<>\":][لأأـ،/؟~ْ}{لآآ,._';
+
+function normalizeLayout(str) {
+  let toAr = "";
+  let toEn = "";
+  for (let ch of str) {
+    const lowCh = ch.toLowerCase();
+    const idxBase = EN_BASE.indexOf(lowCh);
+    const idxShift = EN_SHIFT.indexOf(ch);
+    const idxAr = AR_BASE.indexOf(ch);
+
+    if (idxBase !== -1) {
+      toAr += AR_BASE[idxBase];
+    } else if (idxShift !== -1) {
+      toAr += AR_SHIFT[idxShift];
+    } else {
+      toAr += ch;
+    }
+
+    if (idxAr !== -1) {
+      toEn += EN_BASE[idxAr];
+    } else {
+      toEn += ch;
+    }
+  }
+  return { toAr: toAr.toLowerCase(), toEn: toEn.toLowerCase() };
+}
+
 let PHRASES = JSON.parse(localStorage.getItem('phrases_data') || '[]').map(p => ({
   keyword: p.keyword || p.code || '',
   text: p.text || ''
@@ -456,10 +489,13 @@ function downloadBlob(content, filename, type){
   const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
-/* Search Logic */
+/* Search Logic الشامل */
 function applyFilter(){
-  const q = searchBox.value.trim().toLowerCase();
+  const rawQ = searchBox.value.trim();
+  const q = rawQ.toLowerCase();
+  const { toAr, toEn } = normalizeLayout(rawQ);
   const scope = searchScope.value;
+
   if(q.length) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden');
 
   let list = PHRASES;
@@ -469,7 +505,10 @@ function applyFilter(){
 
   if(q.length){
     if(autoCopyEnabled){
-      const exactMatch = list.find(p => p.keyword.toLowerCase() === q);
+      const exactMatch = list.find(p => {
+        const kw = p.keyword.toLowerCase();
+        return kw === q || kw === toAr || kw === toEn;
+      });
       if(exactMatch){
         handleCopy(exactMatch.text, null, `⚡ تم النسخ تلقائياً: ${exactMatch.keyword}`);
         searchBox.select();
@@ -477,8 +516,10 @@ function applyFilter(){
     }
 
     list = list.filter(p => {
-      const kwMatch = p.keyword.toLowerCase().includes(q);
-      const textMatch = p.text.toLowerCase().includes(q);
+      const kw = p.keyword.toLowerCase();
+      const txt = p.text.toLowerCase();
+      const kwMatch = kw.includes(q) || kw.includes(toAr) || kw.includes(toEn);
+      const textMatch = txt.includes(q) || txt.includes(toAr) || txt.includes(toEn);
       if(scope === 'keyword') return kwMatch;
       if(scope === 'text') return textMatch;
       return kwMatch || textMatch;
@@ -588,7 +629,7 @@ function applyTheme(t){
 themeToggle.addEventListener('click', ()=> applyTheme(theme==='dark'?'light':'dark') );
 applyTheme(theme);
 
-/* --- كود النافذة العائمة الشاملة المحسنة (نسخة 2.3 بخصائص التكبير والتصغير المطلوبة) --- */
+/* --- كود النافذة العائمة الشاملة المحسنة (مع ميزة تحويل الكيبورد الكابيتال والسمول) --- */
 floatingModeBtn.addEventListener('click', async ()=>{
   const pipHTML = `
     <!DOCTYPE html>
@@ -625,7 +666,7 @@ floatingModeBtn.addEventListener('click', async ()=>{
         }
         .timerDisplayRow{display:flex;justify-content:space-between;align-items:center;gap:6px}
         
-        /* تكبير التايمر ليصبح واضحاً وبارزاً جداً */
+        /* التايمر كبير وواضح */
         .timerNum{
           font-size:26px;font-weight:900;font-family:monospace;letter-spacing:1px;
           color:#0b84ff;transition:color 0.2s;flex:1;
@@ -635,7 +676,7 @@ floatingModeBtn.addEventListener('click', async ()=>{
         .timerNum.warning-red{color:#e53935;animation:pulse 0.5s infinite alternate}
         @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.04)}}
         
-        /* تصغير أزرار التحكم بالتايمر */
+        /* أزرار ملمومة */
         .timerActionGroup{display:flex;gap:3px;align-items:center}
         .tBtn{
           border:none;border-radius:5px;padding:4px 6px;font-size:10px;font-weight:700;
@@ -657,7 +698,7 @@ floatingModeBtn.addEventListener('click', async ()=>{
         .keyInput:focus{background:#0b84ff;color:#fff}
         .testSoundBtn{background:#0b84ff;color:#fff;border:none;border-radius:4px;padding:3px 6px;font-size:10px;cursor:pointer;font-weight:bold}
 
-        /* توسيع خانة البحث لتكون أسهل ومريحة للمستخدم */
+        /* خانة البحث الموسعة */
         .searchWrap{position:sticky;top:0;background:${theme==='dark'?'#0f1724':'#f8fafc'};padding-bottom:5px;z-index:10;display:flex;gap:5px;align-items:center}
         #pSearch{
           flex:1;padding:8px 10px;border-radius:7px;border:1.5px solid #0b84ff;
@@ -719,7 +760,7 @@ floatingModeBtn.addEventListener('click', async ()=>{
       </div>
 
       <div class="searchWrap">
-        <input id="pSearch" placeholder="ابحث بالـ Keyword (Esc للتحكم بالتايمر)..." autocomplete="off" />
+        <input id="pSearch" placeholder="ابحث بالـ Keyword (عربي أو إنجليزي)..." autocomplete="off" />
         <span id="pMode" class="modeBadge" title="انقر للتشغيل/التعطيل">⚡ Auto</span>
       </div>
       <div id="pList" class="list"></div>
@@ -1073,15 +1114,22 @@ function setupFloatingLogic(win){
 
   render(PHRASES);
 
+  /* البحث في النافذة العائمة مع التحويل الذكي الشامل للكابيتال والسمول */
   pSearch.addEventListener('input', ()=>{
-    const q = pSearch.value.trim().toLowerCase();
-    if(!q){ 
+    const rawVal = pSearch.value.trim();
+    if(!rawVal){ 
       render(PHRASES); 
       return; 
     }
 
+    const q = rawVal.toLowerCase();
+    const { toAr, toEn } = normalizeLayout(rawVal);
+
     if(localAutoCopy){
-      const exactMatch = PHRASES.find(p => p.keyword.toLowerCase() === q);
+      const exactMatch = PHRASES.find(p => {
+        const kw = p.keyword.toLowerCase();
+        return kw === q || kw === toAr || kw === toEn;
+      });
       if(exactMatch){
         execCopy(exactMatch.text, `⚡ تم النسخ: ${exactMatch.keyword}`);
         setTimeout(()=>{
@@ -1091,7 +1139,10 @@ function setupFloatingLogic(win){
       }
     }
 
-    const filtered = PHRASES.filter(p => p.keyword.toLowerCase().includes(q));
+    const filtered = PHRASES.filter(p => {
+      const kw = p.keyword.toLowerCase();
+      return kw.includes(q) || kw.includes(toAr) || kw.includes(toEn);
+    });
     render(filtered);
   });
 }

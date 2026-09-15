@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Phrase Manager by Mahmoud Helal (v26 - Optimized Floating)</title>
+<title>Phrase Manager by Mahmoud Helal (v26 - Optimized Floating 2.3)</title>
 <style>
   :root{
     --teal:#009688;
@@ -588,7 +588,7 @@ function applyTheme(t){
 themeToggle.addEventListener('click', ()=> applyTheme(theme==='dark'?'light':'dark') );
 applyTheme(theme);
 
-/* --- كود النافذة العائمة الشاملة المحسنة والمدمجة --- */
+/* --- كود النافذة العائمة الشاملة المحسنة (نسخة 2.3 بخصائص التكبير والتصغير المطلوبة) --- */
 floatingModeBtn.addEventListener('click', async ()=>{
   const pipHTML = `
     <!DOCTYPE html>
@@ -621,28 +621,34 @@ floatingModeBtn.addEventListener('click', async ()=>{
           background:${theme==='dark'?'#162032':'#ffffff'};
           border:1px solid ${theme==='dark'?'#22324d':'#cbd5e1'};
           border-radius:8px;padding:6px 8px;margin-bottom:6px;
-          display:flex;flex-direction:column;gap:5px;box-shadow:0 1px 3px rgba(0,0,0,0.05);
+          display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(0,0,0,0.05);
         }
-        .timerDisplayRow{display:flex;justify-content:space-between;align-items:center}
-        .timerNum{font-size:20px;font-weight:800;font-family:monospace;letter-spacing:0.8px;color:#0b84ff;transition:color 0.2s}
-        .timerNum .ms{font-size:14px;opacity:0.8}
+        .timerDisplayRow{display:flex;justify-content:space-between;align-items:center;gap:6px}
+        
+        /* تكبير التايمر ليصبح واضحاً وبارزاً جداً */
+        .timerNum{
+          font-size:26px;font-weight:900;font-family:monospace;letter-spacing:1px;
+          color:#0b84ff;transition:color 0.2s;flex:1;
+        }
+        .timerNum .ms{font-size:16px;opacity:0.85}
         .timerNum.warning-orange{color:#ff9800;animation:pulse 0.9s infinite alternate}
         .timerNum.warning-red{color:#e53935;animation:pulse 0.5s infinite alternate}
-        @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.05)}}
+        @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.04)}}
         
-        .timerActionGroup{display:flex;gap:4px;align-items:center}
+        /* تصغير أزرار التحكم بالتايمر */
+        .timerActionGroup{display:flex;gap:3px;align-items:center}
         .tBtn{
-          border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:700;
-          cursor:pointer;transition:transform 0.1s, opacity 0.15s;
+          border:none;border-radius:5px;padding:4px 6px;font-size:10px;font-weight:700;
+          cursor:pointer;transition:transform 0.1s, opacity 0.15s;white-space:nowrap;
         }
         .tBtn:active{transform:scale(0.96)}
         .tBtn.startState{background:#009688;color:#fff}
         .tBtn.pauseState{background:#ff9800;color:#fff}
-        .settingsBtn{background:transparent;border:none;font-size:14px;cursor:pointer;padding:2px;color:${theme==='dark'?'#94a3b8':'#64748b'};transition:transform 0.2s}
+        .settingsBtn{background:transparent;border:none;font-size:13px;cursor:pointer;padding:1px;color:${theme==='dark'?'#94a3b8':'#64748b'};transition:transform 0.2s}
         .settingsBtn:hover{transform:rotate(45deg);color:#0b84ff}
 
         .timerModesRow{display:flex;gap:4px;justify-content:flex-end}
-        .modeTag{font-size:10px;padding:2px 7px;border-radius:5px;background:transparent;color:${theme==='dark'?'#94a3b8':'#64748b'};cursor:pointer;border:1px solid ${theme==='dark'?'#334155':'#cbd5e1'};font-weight:600;transition:all 0.15s}
+        .modeTag{font-size:9.5px;padding:2px 6px;border-radius:4px;background:transparent;color:${theme==='dark'?'#94a3b8':'#64748b'};cursor:pointer;border:1px solid ${theme==='dark'?'#334155':'#cbd5e1'};font-weight:600;transition:all 0.15s}
         .modeTag.active{background:#0b84ff;color:#fff;border-color:#0b84ff;box-shadow:0 2px 4px rgba(11,132,255,0.25)}
 
         .settingsPanel{display:none;background:${theme==='dark'?'#111927':'#f1f5f9'};border:1px solid ${theme==='dark'?'#22324d':'#cbd5e1'};border-radius:6px;padding:6px;margin-bottom:6px;font-size:11px}
@@ -651,9 +657,14 @@ floatingModeBtn.addEventListener('click', async ()=>{
         .keyInput:focus{background:#0b84ff;color:#fff}
         .testSoundBtn{background:#0b84ff;color:#fff;border:none;border-radius:4px;padding:3px 6px;font-size:10px;cursor:pointer;font-weight:bold}
 
-        .searchWrap{position:sticky;top:0;background:${theme==='dark'?'#0f1724':'#f8fafc'};padding-bottom:5px;z-index:10;display:flex;gap:4px;align-items:center}
-        #pSearch{flex:1;padding:5px 8px;border-radius:6px;border:1px solid #0b84ff;font-size:11.5px;outline:none;background:${theme==='dark'?'#1e293b':'#fff'};color:${theme==='dark'?'#fff':'#000'}}
-        .modeBadge{font-size:9.5px;padding:5px 6px;border-radius:5px;background:#ff9800;color:#fff;cursor:pointer;white-space:nowrap;font-weight:bold;user-select:none}
+        /* توسيع خانة البحث لتكون أسهل ومريحة للمستخدم */
+        .searchWrap{position:sticky;top:0;background:${theme==='dark'?'#0f1724':'#f8fafc'};padding-bottom:5px;z-index:10;display:flex;gap:5px;align-items:center}
+        #pSearch{
+          flex:1;padding:8px 10px;border-radius:7px;border:1.5px solid #0b84ff;
+          font-size:12.5px;outline:none;background:${theme==='dark'?'#1e293b':'#fff'};
+          color:${theme==='dark'?'#fff':'#000'};box-shadow:0 1px 3px rgba(11,132,255,0.1);
+        }
+        .modeBadge{font-size:10px;padding:6px 8px;border-radius:6px;background:#ff9800;color:#fff;cursor:pointer;white-space:nowrap;font-weight:bold;user-select:none}
         .modeBadge.off{background:#94a3b8}
 
         .list{display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;user-select:text}
@@ -680,8 +691,8 @@ floatingModeBtn.addEventListener('click', async ()=>{
         <div class="timerDisplayRow">
           <div id="tDisplay" class="timerNum">00:00<span class="ms">.0</span></div>
           <div class="timerActionGroup">
-            <button id="tMainBtn" class="tBtn startState" title="Space: تشغيل وتصفير من جديد">▶ بدء / تصفير</button>
-            <button id="tPauseBtn" class="tBtn pauseState" title="A: إيقاف مؤقت">⏸ إيقاف (A)</button>
+            <button id="tMainBtn" class="tBtn startState" title="Space: تشغيل وتصفير من جديد">▶ بدء</button>
+            <button id="tPauseBtn" class="tBtn pauseState" title="A: إيقاف مؤقت">⏸ إيقاف</button>
             <button id="btnSettings" class="settingsBtn" title="تعديل اختصارات الكيبورد واختبار الصوت">⚙️</button>
           </div>
         </div>
@@ -720,8 +731,8 @@ floatingModeBtn.addEventListener('click', async ()=>{
   if ('documentPictureInPicture' in window) {
     try {
       const pipWindow = await window.documentPictureInPicture.requestWindow({
-        width: 300,
-        height: 420,
+        width: 310,
+        height: 430,
       });
       pipWindow.document.write(pipHTML);
       pipWindow.document.close();
@@ -732,7 +743,7 @@ floatingModeBtn.addEventListener('click', async ()=>{
     }
   }
 
-  const popup = window.open('', 'floating_phrase_manager', 'width=300,height=420,top=80,left=80,alwaysOnTop=yes,resizable=yes');
+  const popup = window.open('', 'floating_phrase_manager', 'width=310,height=430,top=80,left=80,alwaysOnTop=yes,resizable=yes');
   if(popup){
     popup.document.write(pipHTML);
     popup.document.close();

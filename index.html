@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Phrase Manager by Mahmoud Helal (v26 - Full Layout & Case Support)</title>
+<title>Phrase Manager by Mahmoud Helal (v26 - One-Click Screenshot JPG)</title>
 <style>
   :root{
     --teal:#009688;
@@ -120,7 +120,7 @@
     <div class="controls" style="margin-top:12px">
       <button id="floatingModeBtn" class="btn small highlight" title="Open compact always-on-top window with timer">📌 Floating Window + Timer (عائم)</button>
       <button id="autoCopyToggleBtn" class="btn small ghost toggle-active" title="نسخ مباشر بمجرد كتابة الـ Keyword">⚡ Auto-Copy: ON</button>
-      <button id="screenshotBtn" class="btn small shot-btn" title="التقاط لقطة شاشة ونسخها فوراً للحافظة">📸 Screenshot</button>
+      <button id="screenshotBtn" class="btn small shot-btn" title="التقاط لقطة شاشة وحفظها كـ JPG">📸 Screenshot</button>
       <button id="toggleFavsBtn" class="btn ghost small">❤️ Favorites</button>
       <button id="addBtn" class="btn small">➕ Add New Phrase</button>
 
@@ -184,7 +184,7 @@
       <img id="screenshotPreview" src="" alt="Screenshot" />
       <div class="modal-actions">
         <button id="copyShotBtn" class="btn small">📋 Copy to Clipboard</button>
-        <button id="downloadShotBtn" class="btn small ghost">💾 Download</button>
+        <button id="downloadShotBtn" class="btn small ghost">💾 Download JPG</button>
         <button id="closeModalBtn" class="btn small ghost" style="color:var(--danger);border-color:rgba(229,57,53,0.3);">Close</button>
       </div>
     </div>
@@ -234,7 +234,8 @@ let theme = localStorage.getItem('theme_v6') || 'light';
 let autoCopyEnabled = localStorage.getItem('auto_copy_mode') !== 'false';
 let timerShortcuts = JSON.parse(localStorage.getItem('timer_shortcuts') || '{"startKey":"Space","pauseKey":"KeyA"}');
 let showOnlyFavs = false;
-let currentShotBlob = null;
+let currentShotPngBlob = null;
+let currentShotJpgBlob = null;
 
 /* DOM */
 const tbody = document.getElementById('tbody');
@@ -484,7 +485,7 @@ exportMenu.addEventListener('click', (e)=>{
 });
 
 function downloadBlob(content, filename, type){
-  const blob = new Blob([content], {type});
+  const blob = (content instanceof Blob) ? content : new Blob([content], {type});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
@@ -549,7 +550,7 @@ document.addEventListener('keydown', (e)=>{
   }
 });
 
-/* Screenshot Capture Functionality */
+/* Screenshot Capture Functionality (تحويل مباشر لـ JPG مع الحفظ والنسخ) */
 async function captureAndCopyScreenshot(onSuccess, onError){
   try {
     const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -566,19 +567,32 @@ async function captureAndCopyScreenshot(onSuccess, onError){
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
+    
+    // وضع خلفية بيضاء لتفادي السواد عند التحويل إلى JPG
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     track.stop();
 
-    canvas.toBlob(async (blob) => {
-      currentShotBlob = blob;
-      try {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        if(onSuccess) onSuccess(blob, true);
-      } catch (err) {
-        if(onSuccess) onSuccess(blob, false);
-      }
-    }, 'image/png');
+    // استخراج JPG للحفظ
+    canvas.toBlob((jpgBlob) => {
+      currentShotJpgBlob = jpgBlob;
+      
+      // استخراج PNG لضمان توافق الحافظة في نظام ويندوز
+      canvas.toBlob(async (pngBlob) => {
+        currentShotPngBlob = pngBlob;
+        let copied = false;
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
+          copied = true;
+        } catch (err) {
+          copied = false;
+        }
+        if(onSuccess) onSuccess(jpgBlob, copied);
+      }, 'image/png');
+
+    }, 'image/jpeg', 0.95);
 
   } catch (err) {
     if (err.name !== 'NotAllowedError') {
@@ -588,8 +602,8 @@ async function captureAndCopyScreenshot(onSuccess, onError){
 }
 
 screenshotBtn.addEventListener('click', () => {
-  captureAndCopyScreenshot((blob, copied) => {
-    screenshotPreview.src = URL.createObjectURL(blob);
+  captureAndCopyScreenshot((jpgBlob, copied) => {
+    screenshotPreview.src = URL.createObjectURL(jpgBlob);
     screenshotModal.style.display = 'flex';
     if(copied){
       showToast(copiedToast, 'Copied to Clipboard! 📋');
@@ -600,9 +614,9 @@ screenshotBtn.addEventListener('click', () => {
 });
 
 copyShotBtn.addEventListener('click', async () => {
-  if (!currentShotBlob) return;
+  if (!currentShotPngBlob) return;
   try {
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': currentShotBlob })]);
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': currentShotPngBlob })]);
     showToast(copiedToast, 'Screenshot Copied 📋✅');
   } catch (err) {
     showToast(dangerToast, 'Direct copy failed ❌');
@@ -610,9 +624,9 @@ copyShotBtn.addEventListener('click', async () => {
 });
 
 downloadShotBtn.addEventListener('click', () => {
-  if (!currentShotBlob) return;
-  downloadBlob(currentShotBlob, `Screenshot_${Date.now()}.png`, 'image/png');
-  showToast(infoToast, 'Downloaded ✅');
+  if (!currentShotJpgBlob) return;
+  downloadBlob(currentShotJpgBlob, `Screenshot_${Date.now()}.jpg`, 'image/jpeg');
+  showToast(infoToast, 'Downloaded as JPG ✅');
 });
 
 closeModalBtn.addEventListener('click', () => {
@@ -629,7 +643,7 @@ function applyTheme(t){
 themeToggle.addEventListener('click', ()=> applyTheme(theme==='dark'?'light':'dark') );
 applyTheme(theme);
 
-/* --- كود النافذة العائمة الشاملة المحسنة (مع ميزة تحويل الكيبورد الكابيتال والسمول) --- */
+/* --- كود النافذة العائمة الشاملة المحسنة (زر سكرين شوت مدمج للحفظ والنسخ كـ JPG) --- */
 floatingModeBtn.addEventListener('click', async ()=>{
   const pipHTML = `
     <!DOCTYPE html>
@@ -655,8 +669,11 @@ floatingModeBtn.addEventListener('click', async ()=>{
         }
         .barActions{display:flex;gap:6px;align-items:center}
         .ahtResetBtn{background:transparent;border:none;color:#0b84ff;cursor:pointer;font-size:10.5px;font-weight:bold;padding:0}
-        .ahtShotBtn{background:transparent;border:none;color:#009688;cursor:pointer;font-size:10.5px;font-weight:bold;padding:0;transition:transform 0.15s}
-        .ahtShotBtn:hover{transform:scale(1.08)}
+        .ahtShotBtn{
+          background:transparent;border:none;color:#009688;cursor:pointer;font-size:11px;font-weight:bold;padding:0;
+          transition:transform 0.15s;display:inline-flex;align-items:center;gap:3px;
+        }
+        .ahtShotBtn:hover{transform:scale(1.06);color:#0b84ff}
 
         .timerBox{
           background:${theme==='dark'?'#162032':'#ffffff'};
@@ -666,7 +683,6 @@ floatingModeBtn.addEventListener('click', async ()=>{
         }
         .timerDisplayRow{display:flex;justify-content:space-between;align-items:center;gap:6px}
         
-        /* التايمر كبير وواضح */
         .timerNum{
           font-size:26px;font-weight:900;font-family:monospace;letter-spacing:1px;
           color:#0b84ff;transition:color 0.2s;flex:1;
@@ -676,7 +692,6 @@ floatingModeBtn.addEventListener('click', async ()=>{
         .timerNum.warning-red{color:#e53935;animation:pulse 0.5s infinite alternate}
         @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.04)}}
         
-        /* أزرار ملمومة */
         .timerActionGroup{display:flex;gap:3px;align-items:center}
         .tBtn{
           border:none;border-radius:5px;padding:4px 6px;font-size:10px;font-weight:700;
@@ -698,7 +713,6 @@ floatingModeBtn.addEventListener('click', async ()=>{
         .keyInput:focus{background:#0b84ff;color:#fff}
         .testSoundBtn{background:#0b84ff;color:#fff;border:none;border-radius:4px;padding:3px 6px;font-size:10px;cursor:pointer;font-weight:bold}
 
-        /* خانة البحث الموسعة */
         .searchWrap{position:sticky;top:0;background:${theme==='dark'?'#0f1724':'#f8fafc'};padding-bottom:5px;z-index:10;display:flex;gap:5px;align-items:center}
         #pSearch{
           flex:1;padding:8px 10px;border-radius:7px;border:1.5px solid #0b84ff;
@@ -723,7 +737,7 @@ floatingModeBtn.addEventListener('click', async ()=>{
       <div class="sessionBar">
         <span>⏱️ الشات: <span id="ahtVal" style="color:#0b84ff">00:00</span></span>
         <div class="barActions">
-          <button id="btnFloatingShot" class="ahtShotBtn" title="التقاط اسكرين شوت ونسخها فوراً">📸 سكرين</button>
+          <button id="btnFloatingShot" class="ahtShotBtn" title="التقاط اسكرين شوت وتنزيلها كـ JPG مع نسخها للحافظة فوراً">📸 Screenshot</button>
           <button id="btnResetAht" class="ahtResetBtn" title="تصفير مدة الشات لبدء محادثة جديدة">🔄 جديد</button>
         </div>
       </div>
@@ -818,10 +832,11 @@ function setupFloatingLogic(win){
     showPopToast('تم تصفير مدة الشات 🔄');
   });
 
-  /* التقاط الاسكرين شوت من داخل النافذة العائمة */
+  /* زر Screenshot الموحد: حفظ فوري كـ JPG وتنزيلها مع نسخها للحافظة */
   btnFloatingShot.addEventListener('click', () => {
-    captureAndCopyScreenshot((blob, copied) => {
-      showPopToast('📸 تم نسخ الاسكرين شوت ✅');
+    captureAndCopyScreenshot((jpgBlob, copied) => {
+      downloadBlob(jpgBlob, `Screenshot_${Date.now()}.jpg`, 'image/jpeg');
+      showPopToast('📸 تم النسخ وحفظ JPG في Downloads ✅');
     }, () => {
       showPopToast('تعذر التقاط الاسكرين ❌');
     });
